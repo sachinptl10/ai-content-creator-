@@ -116,13 +116,18 @@ export { io };
 // Global Error Handler
 app.use(errorHandler);
 
-// Start Server & Jobs
-httpServer.listen(PORT, '0.0.0.0', async () => {
-  console.log(`🚀 ViralIQ Backend + WebSockets running on port ${PORT}`);
-  
-  // Start background jobs
-  startTrendRefreshJob(io);
-  startScheduleReminderJob(io);
-  
-  console.log('⏰ Background Cron Jobs started');
-});
+// Start Server & Jobs (Only start HTTP server if not in a serverless environment like Vercel)
+if (!process.env.VERCEL) {
+  httpServer.listen(PORT, '0.0.0.0', async () => {
+    console.log(`🚀 ViralIQ Backend + WebSockets running on port ${PORT}`);
+    
+    // Start background jobs
+    startTrendRefreshJob(io);
+    startScheduleReminderJob(io);
+    
+    console.log('⏰ Background Cron Jobs started');
+  });
+}
+
+// Export for serverless environments
+export default app;
