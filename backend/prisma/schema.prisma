@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  plan          String    @default("free")
+  credits       Int       @default(10)
+  niche         String    @default("General")
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+
+  contents      Content[]
+  calendars     CalendarEntry[]
+  strategies    Strategy[]
+  socialAccounts SocialAccount[]
+  analytics     AnalyticsSnapshot[]
+  strategyBlueprints StrategyBlueprint[]
+}
+
+model SocialAccount {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform     String
+  handle       String?
+  accessToken  String?
+  followers    Int       @default(0)
+  connectedAt  DateTime  @default(now())
+}
+
+model Content {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic         String?
+  body          String?
+  platform      String?   // Primary platform
+  platforms     String?   // JSON array of all selected platforms
+  format        String?
+  niche         String?
+  audience      String?
+  goal          String?
+  tone          String?
+  result        String?   // Full AI output JSON
+  hashtags      String?   // JSON array string
+  hooks         String?   // JSON array string
+  viralityScore Float?    @default(0)
+  status        String    @default("draft")
+  scheduledAt   DateTime?
+  postedAt      DateTime?
+  createdAt     DateTime  @default(now())
+
+  calendarEntries CalendarEntry[]
+}
+
+model AnalyticsSnapshot {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform      String
+  metric        String
+  value         Float
+  recordedAt    DateTime  @default(now())
+}
+
+model CalendarEntry {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentId     String?
+  content       Content?  @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  title         String
+  platform      String?
+  format        String?
+  status        String    @default("draft")
+  scheduledAt   DateTime
+  note          String?
+  createdAt     DateTime  @default(now())
+}
+
+model Strategy {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  niche         String
+  result        String    // Stored as JSON string
+  createdAt     DateTime  @default(now())
+}
+
+model StrategyBlueprint {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  niche        String?
+  goal         String?
+  blueprint    String?   // JSON string
+  createdAt    DateTime  @default(now())
+}
+
+model TrendCache {
+  id            String    @id @default(cuid())
+  niche         String    @unique
+  data          String    // Stored as JSON string
+  updatedAt     DateTime  @updatedAt
+}

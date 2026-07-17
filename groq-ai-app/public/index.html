@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GroqAI — Blazing Fast AI Inference</title>
+  <meta name="description" content="Talk to LLaMA 3, Mixtral and Gemma models powered by Groq's ultra-fast LPU inference engine." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:          #050810;
+      --surface:     #0c0f1e;
+      --surface-2:   #111527;
+      --border:      rgba(255,255,255,0.07);
+      --border-glow: rgba(98, 78, 255, 0.4);
+      --primary:     #6c47ff;
+      --primary-2:   #8166ff;
+      --accent:      #00d4aa;
+      --accent-2:    #ff6b6b;
+      --text:        #f0f2ff;
+      --text-2:      #8892b0;
+      --text-3:      #4a5568;
+      --groq-purple: #6c47ff;
+      --groq-green:  #00d4aa;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ─── Background ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(108,71,255,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,212,170,0.08) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── Layout ─── */
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─── Header ─── */
+    header {
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(5,8,16,0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 20px rgba(108,71,255,0.4);
+    }
+
+    .logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 20%, #8b7cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(0,212,170,0.12);
+      border: 1px solid rgba(0,212,170,0.3);
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .speed-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+
+    .speed-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ─── Main ─── */
+    main {
+      flex: 1;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 24px 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      text-align: center;
+      padding: 20px 0 8px;
+    }
+
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(28px, 5vw, 46px);
+      font-weight: 700;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #ffffff 30%, #8b7cff 70%, #00d4aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+
+    .hero p {
+      font-size: 15px;
+      color: var(--text-2);
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ─── Card ─── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+
+    .card:focus-within {
+      border-color: rgba(108,71,255,0.4);
+      box-shadow: 0 0 0 3px rgba(108,71,255,0.08), 0 8px 30px rgba(0,0,0,0.3);
+    }
+
+    /* ─── Model Selector ─── */
+    .config-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .field select, .field input[type="range"] {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 10px 14px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.18s;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+
+    .field select:focus { border-color: var(--primary); }
+
+    .temp-row { display: flex; align-items: center; gap: 10px; }
+    .temp-row input[type="range"] {
+      flex: 1;
+      background: var(--surface-2);
+      border: none;
+      padding: 0;
+      height: 4px;
+      border-radius: 4px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .temp-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-2);
+      min-width: 28px;
+      text-align: right;
+    }
+
+    /* ─── System Prompt ─── */
+    .system-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-2);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .system-toggle input { accent-color: var(--primary); cursor: pointer; }
+
+    #system-prompt-wrap {
+      margin-top: 12px;
+      display: none;
+    }
+
+    #system-prompt-wrap.visible { display: block; }
+
+    /* ─── Prompt Textarea ─── */
+    .prompt-area {
+      position: relative;
+    }
+
+    #prompt {
+      width: 100%;
+      min-height: 130px;
+      max-height: 340px;
+      resize: vertical;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      padding: 16px 18px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    #prompt:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108,71,255,0.12);
+    }
+
+    #prompt::placeholder { color: var(--text-3); }
+
+    #system-prompt {
+      width: 100%;
+      min-height: 70px;
+      resize: vertical;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #system-prompt:focus { border-color: var(--primary); }
+
+    .char-counter {
+      position: absolute;
+      bottom: 10px;
+      right: 14px;
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    /* ─── Toolbar ─── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-left { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-2);
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .chip:hover {
+      background: rgba(108,71,255,0.12);
+      border-color: rgba(108,71,255,0.3);
+      color: #a78bfa;
+    }
+
+    /* ─── Submit Button ─── */
+    #submit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(108,71,255,0.35);
+      white-space: nowrap;
+    }
+
+    #submit-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(108,71,255,0.5);
+    }
+
+    #submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-icon { font-size: 18px; }
+
+    /* ─── Response Panel ─── */
+    #response-panel {
+      display: none;
+      animation: fadeSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #response-panel.visible { display: block; }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .response-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .response-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .meta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .meta-badge.model {
+      background: rgba(108,71,255,0.15);
+      border: 1px solid rgba(108,71,255,0.3);
+      color: #a78bfa;
+    }
+
+    .meta-badge.tokens {
+      background: rgba(0,212,170,0.1);
+      border: 1px solid rgba(0,212,170,0.25);
+      color: var(--accent);
+    }
+
+    .meta-badge.time {
+      background: rgba(255,107,107,0.1);
+      border: 1px solid rgba(255,107,107,0.25);
+      color: #ff8080;
+    }
+
+    .response-actions { display: flex; gap: 8px; }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-2);
+      transition: all 0.18s;
+    }
+
+    .action-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.15);
+      color: var(--text);
+    }
+
+    .action-btn.copied {
+      background: rgba(0,212,170,0.1);
+      border-color: rgba(0,212,170,0.3);
+      color: var(--accent);
+    }
+
+    /* ─── Response Text ─── */
+    #response-text {
+      font-size: 15px;
+      line-height: 1.75;
+      color: #d1d5f0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #response-text code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: rgba(255,255,255,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #cba6f7;
+    }
+
+    /* ─── Loading ─── */
+    .loading-bar {
+      width: 100%;
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .loading-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+      background-size: 200% 100%;
+      animation: shimmer 1.5s linear infinite;
+      border-radius: 2px;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .loading-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 0;
+    }
+
+    .loading-dots span {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: bounce 1.2s ease infinite;
+    }
+
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+      40%           { transform: scale(1);   opacity: 1;   }
+    }
+
+    .loading-text {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-left: 4px;
+      font-style: italic;
+    }
+
+    /* ─── Error ─── */
+    .error-box {
+      background: rgba(255,107,107,0.08);
+      border: 1px solid rgba(255,107,107,0.25);
+      border-radius: 12px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: #fca5a5;
+      white-space: pre-wrap;
+    }
+
+    .error-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ─── Examples ─── */
+    .example-prompts {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .example-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+
+    .example-card:hover {
+      border-color: rgba(108,71,255,0.4);
+      background: rgba(108,71,255,0.05);
+      transform: translateY(-1px);
+    }
+
+    .example-card .ex-icon { font-size: 20px; margin-bottom: 6px; }
+    .example-card .ex-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .example-card .ex-sub   { font-size: 11px; color: var(--text-2); line-height: 1.4; }
+
+    /* ─── Section Label ─── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-3);
+      margin-bottom: 12px;
+    }
+
+    /* ─── Divider ─── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    /* ─── Footer ─── */
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      color: var(--text-3);
+      border-top: 1px solid var(--border);
+    }
+
+    footer a { color: #a78bfa; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ─── Scroll ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: rgba(108,71,255,0.4); border-radius: 3px; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 640px) {
+      header { padding: 14px 16px; }
+      main   { padding: 24px 14px 100px; gap: 18px; }
+      .card  { padding: 16px; }
+      .config-row { flex-direction: column; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      #submit-btn { justify-content: center; }
+      .example-prompts { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <span class="logo-text">GroqAI</span>
+      <span class="logo-badge">ULTRA-FAST</span>
+    </div>
+    <div class="header-right">
+      <div class="speed-badge">
+        <div class="speed-dot"></div>
+        LPU Inference Engine
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <div class="hero">
+      <h1>Ask Anything.<br/>Get Answers Instantly.</h1>
+      <p>Powered by Groq's blazing-fast LPU™ inference — experience LLaMA 3, Mixtral & Gemma at superhuman speeds.</p>
+    </div>
+
+    <!-- Model Configuration -->
+    <div class="card">
+      <div class="config-row">
+        <div class="field">
+          <label>Model</label>
+          <select id="model-select">
+            <option value="llama3-70b-8192">LLaMA 3 70B — Powerful</option>
+            <option value="llama3-8b-8192">LLaMA 3 8B — Fast</option>
+            <option value="mixtral-8x7b-32768">Mixtral 8x7B — Long Context</option>
+            <option value="gemma2-9b-it">Gemma 2 9B — Balanced</option>
+            <option value="llama-3.1-8b-instant">LLaMA 3.1 8B Instant</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Temperature — <span id="temp-label">0.7</span></label>
+          <div class="temp-row">
+            <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7" />
+          </div>
+        </div>
+      </div>
+
+      <div class="divider" style="margin: 16px 0 12px;"></div>
+
+      <label class="system-toggle">
+        <input type="checkbox" id="system-toggle-cb" />
+        Add system prompt (optional)
+      </label>
+
+      <div id="system-prompt-wrap">
+        <textarea
+          id="system-prompt"
+          placeholder="You are a helpful assistant. You respond concisely and accurately..."
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Prompt Input -->
+    <div class="card">
+      <div class="prompt-area">
+        <textarea
+          id="prompt"
+          placeholder="Ask me anything... What's the future of AI? Explain quantum computing. Write a Python function to sort a list..."
+          autocomplete="off"
+          spellcheck="true"
+        ></textarea>
+        <span class="char-counter" id="char-counter">0 / 8000</span>
+      </div>
+
+      <div style="margin-top: 14px;">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="chip" onclick="insertExample('Explain quantum entanglement in simple terms.')">🔭 Science</span>
+            <span class="chip" onclick="insertExample('Write a Python function to find all prime numbers up to 1000.')">💻 Code</span>
+            <span class="chip" onclick="insertExample('Give me 5 innovative business ideas for 2025.')">💡 Business</span>
+            <span class="chip" onclick="clearAll()">🗑️ Clear</span>
+          </div>
+          <button id="submit-btn" onclick="generate()">
+            <span class="btn-icon">⚡</span>
+            Generate Response
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Example Prompts -->
+    <div id="examples-section">
+      <div class="section-label">Try a Prompt</div>
+      <div class="example-prompts">
+        <div class="example-card" onclick="useExample('Explain the difference between machine learning and deep learning.')">
+          <div class="ex-icon">🧠</div>
+          <div class="ex-title">Machine vs Deep Learning</div>
+          <div class="ex-sub">Explain the core difference</div>
+        </div>
+        <div class="example-card" onclick="useExample('Write a haiku about artificial intelligence.')">
+          <div class="ex-icon">🎋</div>
+          <div class="ex-title">AI Haiku</div>
+          <div class="ex-sub">Creative poetry writing</div>
+        </div>
+        <div class="example-card" onclick="useExample('What are the top 5 programming languages to learn in 2025 and why?')">
+          <div class="ex-icon">📊</div>
+          <div class="ex-title">Top Languages 2025</div>
+          <div class="ex-sub">Career development advice</div>
+        </div>
+        <div class="example-card" onclick="useExample('Write a JavaScript function that debounces another function with a given delay.')">
+          <div class="ex-icon">⚙️</div>
+          <div class="ex-title">Debounce Function</div>
+          <div class="ex-sub">JavaScript utility code</div>
+        </div>
+        <div class="example-card" onclick="useExample('Summarize the key principles of stoic philosophy in 5 bullet points.')">
+          <div class="ex-icon">🏛️</div>
+          <div class="ex-title">Stoic Philosophy</div>
+          <div class="ex-sub">Ancient wisdom, summarized</div>
+        </div>
+        <div class="example-card" onclick="useExample('Create a 7-day meal plan for someone trying to build muscle on a vegetarian diet.')">
+          <div class="ex-icon">🥗</div>
+          <div class="ex-title">Vegetarian Meal Plan</div>
+          <div class="ex-sub">Nutrition & fitness advice</div>
+        </div>
+        <div class="example-card" onclick="useExample('Explain how a blockchain works using a simple real-world analogy.')">
+          <div class="ex-icon">🔗</div>
+          <div class="ex-title">Blockchain Explained</div>
+          <div class="ex-sub">Simple analogy explanation</div>
+        </div>
+        <div class="example-card" onclick="useExample('Write a professional LinkedIn post about the impact of AI on software development.')">
+          <div class="ex-icon">💼</div>
+          <div class="ex-title">LinkedIn Post</div>
+          <div class="ex-sub">Professional content writing</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Response Panel -->
+    <div id="response-panel" class="card">
+      <!-- Loading -->
+      <div id="loading-state" style="display:none;">
+        <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+        <div class="loading-dots">
+          <span></span><span></span><span></span>
+          <span class="loading-text">Groq is thinking at 500+ tok/s...</span>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="error-state" style="display:none;">
+        <div class="error-box">
+          <span class="error-icon">⚠️</span>
+          <div id="error-text"></div>
+        </div>
+      </div>
+
+      <!-- Success -->
+      <div id="success-state" style="display:none;">
+        <div class="response-header">
+          <div class="response-meta">
+            <span class="meta-badge model" id="model-badge">🤖 llama3-70b</span>
+            <span class="meta-badge tokens" id="tokens-badge">⚡ — tokens</span>
+            <span class="meta-badge time" id="time-badge">🕐 — ms</span>
+          </div>
+          <div class="response-actions">
+            <button class="action-btn" id="copy-btn" onclick="copyResponse()">
+              📋 Copy
+            </button>
+            <button class="action-btn" onclick="clearResponse()">
+              🗑️ Clear
+            </button>
+          </div>
+        </div>
+        <div class="divider" style="margin-bottom: 16px;"></div>
+        <div id="response-text"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    Built with ❤️ using <a href="https://groq.com" target="_blank">Groq API</a> &amp; Node.js · <a href="https://console.groq.com" target="_blank">Get Free API Key →</a>
+  </footer>
+</div>
+
+<script>
+  /* ── State ── */
+  let lastResponse = '';
+  let startTime = 0;
+
+  /* ── DOM refs ── */
+  const promptEl     = document.getElementById('prompt');
+  const submitBtn    = document.getElementById('submit-btn');
+  const responsePanel= document.getElementById('response-panel');
+  const loadingState = document.getElementById('loading-state');
+  const errorState   = document.getElementById('error-state');
+  const successState = document.getElementById('success-state');
+  const responseText = document.getElementById('response-text');
+  const charCounter  = document.getElementById('char-counter');
+  const tempSlider   = document.getElementById('temperature');
+  const tempLabel    = document.getElementById('temp-label');
+  const sysCb        = document.getElementById('system-toggle-cb');
+  const sysWrap      = document.getElementById('system-prompt-wrap');
+  const examplesSection = document.getElementById('examples-section');
+
+  /* ── Temperature slider ── */
+  tempSlider.addEventListener('input', () => {
+    tempLabel.textContent = tempSlider.value;
+  });
+
+  /* ── System prompt toggle ── */
+  sysCb.addEventListener('change', () => {
+    sysWrap.classList.toggle('visible', sysCb.checked);
+  });
+
+  /* ── Char counter ── */
+  promptEl.addEventListener('input', () => {
+    const len = promptEl.value.length;
+    charCounter.textContent = `${len.toLocaleString()} / 8,000`;
+    charCounter.style.color = len > 7500 ? '#ff8080' : 'var(--text-3)';
+  });
+
+  /* ── Submit on Ctrl+Enter ── */
+  promptEl.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
+  });
+
+  /* ── Example helpers ── */
+  function insertExample(text) {
+    promptEl.value = text;
+    promptEl.dispatchEvent(new Event('input'));
+    promptEl.focus();
+  }
+
+  function useExample(text) {
+    insertExample(text);
+    examplesSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function clearAll() {
+    promptEl.value = '';
+    promptEl.dispatchEvent(new Event('input'));
+    clearResponse();
+    promptEl.focus();
+  }
+
+  /* ── Show/hide response states ── */
+  function showPanel()    { responsePanel.classList.add('visible'); }
+  function hidePanel()    { responsePanel.classList.remove('visible'); }
+
+  function showLoading() {
+    showPanel();
+    loadingState.style.display = 'block';
+    errorState.style.display = 'none';
+    successState.style.display = 'none';
+  }
+
+  function showError(msg) {
+    showPanel();
+    loadingState.style.display = 'none';
+    errorState.style.display = 'block';
+    successState.style.display = 'none';
+    document.getElementById('error-text').textContent = msg;
+  }
+
+  function showSuccess(data, elapsedMs) {
+    showPanel();
+    loadingState.style.display = 'none';
+    errorState.style.display = 'none';
+    successState.style.display = 'block';
+
+    lastResponse = data.response;
+
+    // Render response with basic markdown-like formatting
+    responseText.innerHTML = formatResponse(data.response);
+
+    // Meta badges
+    document.getElementById('model-badge').textContent = `🤖 ${(data.model || 'llama3').split('-').slice(0,2).join('-')}`;
+    document.getElementById('tokens-badge').textContent = `⚡ ${data.usage?.total_tokens ?? '—'} tokens`;
+    document.getElementById('time-badge').textContent   = `🕐 ${elapsedMs}ms`;
+  }
+
+  function clearResponse() {
+    hidePanel();
+    lastResponse = '';
+  }
+
+  /* ── Format response (basic markdown) ── */
+  function formatResponse(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      // Code blocks
+      .replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) =>
+        `<pre style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;overflow-x:auto;margin:10px 0;"><code style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#cba6f7;">${code.trim()}</code></pre>`
+      )
+      // Inline code
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      // Bold
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      // Headings
+      .replace(/^### (.+)$/gm, '<h3 style="font-size:15px;font-weight:700;color:#e2e8f0;margin:14px 0 6px;">$1</h3>')
+      .replace(/^## (.+)$/gm,  '<h2 style="font-size:17px;font-weight:700;color:#e2e8f0;margin:16px 0 8px;">$1</h2>')
+      .replace(/^# (.+)$/gm,   '<h1 style="font-size:19px;font-weight:700;color:#e2e8f0;margin:18px 0 10px;">$1</h1>')
+      // Bullet points
+      .replace(/^[•\-\*] (.+)$/gm, '<li style="margin-left:20px;margin-bottom:4px;">$1</li>')
+      // Numbered lists
+      .replace(/^\d+\. (.+)$/gm, '<li style="margin-left:20px;margin-bottom:4px;list-style-type:decimal;">$1</li>')
+      // Line breaks
+      .replace(/\n\n/g, '</p><p style="margin-bottom:10px;">')
+      .replace(/\n/g, '<br>');
+  }
+
+  /* ── Generate ── */
+  async function generate() {
+    const prompt = promptEl.value.trim();
+    if (!prompt) {
+      promptEl.focus();
+      promptEl.style.borderColor = '#ff6b6b';
+      setTimeout(() => { promptEl.style.borderColor = ''; }, 1500);
+      return;
+    }
+
+    const model       = document.getElementById('model-select').value;
+    const temperature = parseFloat(tempSlider.value);
+    const systemPrompt= sysCb.checked ? document.getElementById('system-prompt').value.trim() : '';
+
+    // UI: loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="btn-icon">⏳</span> Generating...';
+    showLoading();
+    startTime = Date.now();
+
+    // Scroll to response
+    responsePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    try {
+      const res = await fetch('/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, model, temperature, systemPrompt }),
+      });
+
+      const elapsed = Date.now() - startTime;
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        showError(data.error || `Server error ${res.status}`);
+      } else {
+        showSuccess(data, elapsed);
+      }
+    } catch (err) {
+      showError(`Network error: ${err.message}\n\nMake sure the server is running on port 3500.`);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span class="btn-icon">⚡</span> Generate Response';
+    }
+  }
+
+  /* ── Copy ── */
+  async function copyResponse() {
+    if (!lastResponse) return;
+    try {
+      await navigator.clipboard.writeText(lastResponse);
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✅ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.innerHTML = '📋 Copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    } catch {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = lastResponse;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  }
+</script>
+</body>
+</html>
