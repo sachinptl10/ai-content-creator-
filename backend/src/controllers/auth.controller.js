@@ -43,7 +43,7 @@ export const register = async (req, res, next) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, plan: user.plan },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'viraliq_fallback_secret_key',
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
@@ -96,7 +96,7 @@ export const login = async (req, res, next) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, plan: user.plan },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'viraliq_fallback_secret_key',
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 

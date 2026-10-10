@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -85,27 +86,29 @@ const RootRoute = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Protected Area */}
-          <Route path="/dashboard" element={<ProtectedRoute pageKey="dashboard"><Dashboard /></ProtectedRoute>} />
-          <Route path="/generator" element={<ProtectedRoute pageKey="generator"><ContentGenerator /></ProtectedRoute>} />
-          <Route path="/trends" element={<ProtectedRoute pageKey="trends"><TrendLab /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute pageKey="analytics"><Analytics /></ProtectedRoute>} />
-          <Route path="/calendar" element={<ProtectedRoute pageKey="calendar"><Calendar /></ProtectedRoute>} />
-          <Route path="/strategy" element={<ProtectedRoute pageKey="strategy"><Strategy /></ProtectedRoute>} />
-          <Route path="/ai" element={<ProtectedRoute pageKey="ai"><AIAssistant /></ProtectedRoute>} />
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID_HERE'}>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Intelligent Fallback */}
-          <Route path="/" element={<RootRoute />} />
-          <Route path="*" element={<RootRoute />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            {/* Protected Area */}
+            <Route path="/dashboard" element={<ProtectedRoute pageKey="dashboard"><Dashboard /></ProtectedRoute>} />
+            <Route path="/generator" element={<ProtectedRoute pageKey="generator"><ContentGenerator /></ProtectedRoute>} />
+            <Route path="/trends" element={<ProtectedRoute pageKey="trends"><TrendLab /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute pageKey="analytics"><Analytics /></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute pageKey="calendar"><Calendar /></ProtectedRoute>} />
+            <Route path="/strategy" element={<ProtectedRoute pageKey="strategy"><Strategy /></ProtectedRoute>} />
+            <Route path="/ai" element={<ProtectedRoute pageKey="ai"><AIAssistant /></ProtectedRoute>} />
+
+            {/* Intelligent Fallback */}
+            <Route path="/" element={<RootRoute />} />
+            <Route path="*" element={<RootRoute />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }

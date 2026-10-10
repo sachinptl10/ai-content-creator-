@@ -3304,3 +3304,175 @@ option {
   /* Light Lime */
   border: 1px solid #89E55E !important;
 }
+/* ==================== Google OAuth Login Styles ==================== */
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 25px 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.auth-divider::before {
+  margin-right: 15px;
+}
+
+.auth-divider::after {
+  margin-left: 15px;
+}
+
+/* Google Login Container */
+.google-login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  padding: 15px 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.google-login-container:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.08));
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 30px rgba(66, 133, 244, 0.15);
+}
+
+/* Google Button Styling - Override defaults */
+.google-login-container div {
+  width: 100% !important;
+}
+
+.google-login-container button {
+  width: 100% !important;
+  height: 48px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  letter-spacing: 0.3px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 8px 20px rgba(66, 133, 244, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(135deg, #4285F4 0%, #1967D2 100%) !important;
+}
+
+.google-login-container button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 35px rgba(66, 133, 244, 0.35) !important;
+}
+
+.google-login-container button:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 6px 15px rgba(66, 133, 244, 0.2) !important;
+}
+
+/* Google Logo and Text styling */
+.google-login-container img {
+  margin-right: 8px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .auth-card-tall {
+    padding: 35px 25px;
+    min-height: auto;
+  }
+
+  .google-login-container {
+    margin: 15px 0;
+    padding: 12px 0;
+  }
+
+  .google-login-container button {
+    height: 44px !important;
+    font-size: 14px !important;
+  }
+
+  .auth-divider {
+    margin: 20px 0;
+    font-size: 12px;
+  }
+
+  .auth-divider::before,
+  .auth-divider::after {
+    display: none;
+  }
+
+  .auth-divider::before {
+    content: '—————';
+    margin: 0;
+  }
+
+  .auth-divider::after {
+    content: '—————';
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-card-tall {
+    padding: 25px 15px;
+    max-width: 100%;
+    border-radius: 15px;
+  }
+
+  .google-login-container button {
+    height: 42px !important;
+    font-size: 13px !important;
+  }
+
+  .auth-title-tall {
+    font-size: 24px;
+  }
+
+  .form-group-tall input {
+    font-size: 16px;
+  }
+}
+
+/* Dark theme optimizations */
+@media (prefers-color-scheme: dark) {
+  .google-login-container {
+    background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(66, 133, 244, 0.02));
+  }
+
+  .google-login-container:hover {
+    background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(66, 133, 244, 0.05));
+  }
+}
+
+/* Animation for button entrance */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.google-login-container {
+  animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
+}
+

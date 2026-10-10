@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, UserPlus, Lock, Mail, AlertCircle } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  const { login, user } = useAuth();
+
+  const { login, loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
 
   // Removed auto-redirect so user can explicitly test the login flow
@@ -19,7 +20,7 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     const result = await login(email, password);
     if (result.success) {
       navigate('/dashboard');
@@ -27,6 +28,22 @@ export default function Login() {
       setError(result.message);
     }
     setIsLoading(false);
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true);
+    setError('');
+    const result = await loginWithGoogle(credentialResponse);
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setError(result.message);
+    }
+    setIsLoading(false);
+  };
+
+  const handleGoogleError = () => {
+    setError('Google login failed. Please try again.');
   };
 
   return (
@@ -74,6 +91,21 @@ export default function Login() {
             {isLoading ? 'Signing in...' : 'Log in'}
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="auth-divider">
+          <span>or</span>
+        </div>
+
+        {/* Google Login Button */}
+        <div className="google-login-container">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            locale="en"
+            theme="dark"
+          />
+        </div>
 
         <div className="auth-footer-tall">
           Don't have a account <Link to="/register">Register</Link>

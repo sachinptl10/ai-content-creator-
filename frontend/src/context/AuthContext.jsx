@@ -62,13 +62,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (credentialResponse) => {
+    try {
+      const res = await client.post('/auth/google-login', {
+        token: credentialResponse.credential
+      });
+      if (res.data.success) {
+        const { token, user } = res.data.data;
+        localStorage.setItem('viraliq_token', token);
+        setUser(user);
+        return { success: true };
+      }
+    } catch (error) {
+      const msg = error.response?.data?.error?.message;
+      return {
+        success: false,
+        message: msg || (error.message === 'Network Error' ? 'Network Error: Backend unreachable or CORS blocked' : 'Google login failed')
+      };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('viraliq_token');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user, loginWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );
